@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DiabetesIQ — Medical Diagnosis System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f2eb;
+    --surface: #fff;
+    --border: #e0d9ce;
+    --text: #1a1612;
+    --muted: #7a7066;
+    --accent: #c84b2f;
+    --accent-light: #fdf0ec;
+    --green: #2d6a4f;
+    --green-light: #edf7f2;
+    --yellow: #b5850a;
+    --yellow-light: #fdf8ec;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--surface);
+  }
+
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .logo span { color: var(--accent); font-style: italic; }
+
+  .tagline {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-left: 1px solid var(--border);
+    padding-left: 1rem;
+    margin-left: 0.25rem;
+  }
+
+  main {
+    max-width: 900px;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem;
+  }
+
+  .intro {
+    margin-bottom: 2rem;
+  }
+
+  .intro h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .intro p {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--card-shadow);
+  }
+
+  .card-title {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .gender-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .gender-btn {
+    flex: 1;
+    padding: 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .gender-btn.active {
+    background: var(--text);
+    color: #fff;
+    border-color: var(--text);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 0.35rem; }
+
+  .field label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .field input {
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .field input:focus { border-color: var(--text); background: #fff; }
+
+  .field .hint {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  #preg-field { display: none; }
+
+  .run-btn {
+    width: 100%;
+    margin-top: 1.5rem;
+    padding: 0.85rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .run-btn:hover { opacity: 0.9; }
+  .run-btn:active { transform: scale(0.99); }
+  .run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .results { display: none; }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .result-item {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    background: var(--bg);
+  }
+
+  .result-item .r-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .result-item .r-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+
+  .result-item .r-sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .diabetic   { color: var(--accent); }
+  .healthy    { color: var(--green); }
+  .medium-risk{ color: var(--yellow); }
+
+  .verdict {
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  .verdict.high   { background: var(--accent-light); border: 1px solid #f5c4b5; color: #8b2a14; }
+  .verdict.medium { background: var(--yellow-light); border: 1px solid #f0d898; color: #7a5a06; }
+  .verdict.low    { background: var(--green-light);  border: 1px solid #b7dfc9; color: #1e4f38; }
+
+  .spinner {
+    display: none;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.6s ease;
+  }
+  .fill-red    { background: var(--accent); }
+  .fill-green  { background: var(--green); }
+  .fill-yellow { background: var(--yellow); }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .result-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Diabetes<span>IQ</span></div>
+  <div class="tagline">Soft Computing · Medical Diagnosis System</div>
+</header>
+
+<main>
+  <div class="intro">
+    <h1>Patient Risk Assessment</h1>
+    <p>Combines Fuzzy Inference, Neural Network (MLP), and Naive Bayes to estimate diabetes risk from clinical indicators.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Patient Details</div>
+
+    <div class="gender-row">
+      <button class="gender-btn active" id="btn-female" onclick="setGender('female')">Female</button>
+      <button class="gender-btn" id="btn-male" onclick="setGender('male')">Male</button>
+    </div>
+
+    <div class="field" id="preg-field" style="margin-bottom:1rem;">
+      <label>Pregnancies</label>
+      <input type="number" id="pregnancies" min="0" max="20" value="1" />
+      <span class="hint">Number of times pregnant</span>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label>Glucose (mg/dL)</label>
+        <input type="number" id="glucose" placeholder="120" min="50" max="200" />
+        <span class="hint">Normal: 70–99</span>
+      </div>
+      <div class="field">
+        <label>BMI (kg/m²)</label>
+        <input type="number" id="bmi" placeholder="28.5" min="10" max="70" step="0.1" />
+        <span class="hint">Normal: 18.5–24.9</span>
+      </div>
+      <div class="field">
+        <label>Blood Pressure (mmHg)</label>
+        <input type="number" id="bp" placeholder="80" min="40" max="130" />
+        <span class="hint">Normal: 60–80</span>
+      </div>
+      <div class="field">
+        <label>Age</label>
+        <input type="number" id="age" placeholder="35" min="1" max="100" />
+      </div>
+      <div class="field">
+        <label>Skin Thickness (mm)</label>
+        <input type="number" id="skin" placeholder="20" min="0" max="100" />
+        <span class="hint">Avg: 20–30</span>
+      </div>
+      <div class="field">
+        <label>Insulin (μU/mL)</label>
+        <input type="number" id="insulin" placeholder="80" min="0" max="846" />
+        <span class="hint">Normal: 16–166</span>
+      </div>
+      <div class="field" style="grid-column: span 2;">
+        <label>Diabetes Pedigree Function</label>
+        <input type="number" id="dpf" placeholder="0.5" min="0" max="3" step="0.01" />
+        <span class="hint">Family history score (0.08–2.42, higher = stronger history)</span>
+      </div>
+    </div>
+
+    <button class="run-btn" id="run-btn" onclick="runPrediction()">
+      <span id="btn-text">Run Prediction</span>
+      <div class="spinner" id="spinner"></div>
+    </button>
+  </div>
+
+  <div class="card results" id="results">
+    <div class="card-title">Prediction Results</div>
+
+    <div class="result-grid">
+      <div class="result-item">
+        <div class="r-label">Fuzzy Risk Score</div>
+        <div class="r-value" id="r-fuzzy">—</div>
+        <div class="r-sub">out of 100</div>
+        <div class="progress-bar"><div class="progress-fill" id="fuzzy-bar" style="width:0%"></div></div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">Naive Bayes</div>
+        <div class="r-value" id="r-nb">—</div>
+        <div class="r-sub" id="r-nb-prob">—</div>
+        <div class="progress-bar"><div class="progress-fill" id="nb-bar" style="width:0%"></div></div>
+      </div>
+      <div class="result-item">
+        <div class="r-label">MLP Neural Network</div>
+        <div class="r-value" id="r-mlp">—</div>
+        <div class="r-sub" id="r-mlp-prob">—</div>
+        <div class="progress-bar"><div class="progress-fill" id="mlp-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="verdict" id="verdict"></div>
+  </div>
+</main>
+
+<footer>
+  Soft Computing Project &nbsp;·&nbsp; Pima Indians Diabetes Dataset &nbsp;·&nbsp; Fuzzy Logic + MLP + Naive Bayes
+</footer>
+
+<script>
+  let gender = 'female';
+
+  function setGender(g) {
+    gender = g;
+    document.getElementById('btn-female').classList.toggle('active', g === 'female');
+    document.getElementById('btn-male').classList.toggle('active', g === 'male');
+    document.getElementById('preg-field').style.display = g === 'female' ? 'flex' : 'none';
+  }
+
+  setGender('female');
+
+  async function runPrediction() {
+    const ids = ['glucose','bmi','bp','age','skin','insulin','dpf'];
+    const vals = ids.map(id => document.getElementById(id).value);
+    if (vals.some(v => v === '')) { alert('Please fill in all fields.'); return; }
+
+    const btn = document.getElementById('run-btn');
+    btn.disabled = true;
+    document.getElementById('btn-text').style.display = 'none';
+    document.getElementById('spinner').style.display = 'block';
+
+    const payload = {
+      pregnancies:       gender === 'female' ? (document.getElementById('pregnancies').value || 0) : 0,
+      glucose:           vals[0],
+      blood_pressure:    vals[2],
+      skin_thickness:    vals[4],
+      insulin:           vals[5],
+      bmi:               vals[1],
+      diabetes_pedigree: vals[6],
+      age:               vals[3],
+    };
+
+    try {
+      const res  = await fetch('/predict', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const data = await res.json();
+      showResults(data);
+    } catch(e) {
+      alert('Prediction failed. Make sure the Flask server is running.');
+    } finally {
+      btn.disabled = false;
+      document.getElementById('btn-text').style.display = 'block';
+      document.getElementById('spinner').style.display = 'none';
+    }
+  }
+
+  function showResults(data) {
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+
+    const fr = data.fuzzy_risk;
+    const frEl = document.getElementById('r-fuzzy');
+    frEl.textContent = fr;
+    frEl.className = 'r-value ' + (fr >= 60 ? 'diabetic' : fr >= 35 ? 'medium-risk' : 'healthy');
+    document.getElementById('fuzzy-bar').style.width = fr + '%';
+    document.getElementById('fuzzy-bar').className = 'progress-fill ' + (fr >= 60 ? 'fill-red' : fr >= 35 ? 'fill-yellow' : 'fill-green');
+
+    const nbEl = document.getElementById('r-nb');
+    nbEl.textContent = data.nb_result;
+    nbEl.className = 'r-value ' + (data.nb_result === 'Diabetic' ? 'diabetic' : 'healthy');
+    document.getElementById('r-nb-prob').textContent = data.nb_prob + '% probability';
+    document.getElementById('nb-bar').style.width = data.nb_prob + '%';
+    document.getElementById('nb-bar').className = 'progress-fill ' + (data.nb_result === 'Diabetic' ? 'fill-red' : 'fill-green');
+
+    const mlpEl = document.getElementById('r-mlp');
+    mlpEl.textContent = data.mlp_result;
+    mlpEl.className = 'r-value ' + (data.mlp_result === 'Diabetic' ? 'diabetic' : 'healthy');
+    document.getElementById('r-mlp-prob').textContent = data.mlp_prob + '% probability';
+    document.getElementById('mlp-bar').style.width = data.mlp_prob + '%';
+    document.getElementById('mlp-bar').className = 'progress-fill ' + (data.mlp_result === 'Diabetic' ? 'fill-red' : 'fill-green');
+
+    const verdict = document.getElementById('verdict');
+    const diabeticCount = [data.nb_result, data.mlp_result].filter(r => r === 'Diabetic').length;
+    if (fr >= 60 || diabeticCount === 2) {
+      verdict.className = 'verdict high';
+      verdict.innerHTML = '<strong>High Risk:</strong> Both models indicate a high probability of diabetes. Fuzzy risk score is ' + fr + '/100. Clinical consultation is strongly recommended.';
+    } else if (fr >= 35 || diabeticCount === 1) {
+      verdict.className = 'verdict medium';
+      verdict.innerHTML = '<strong>Moderate Risk:</strong> Models show mixed signals. Fuzzy risk score is ' + fr + '/100. Further monitoring and lifestyle evaluation is advised.';
+    } else {
+      verdict.className = 'verdict low';
+      verdict.innerHTML = '<strong>Low Risk:</strong> Both models suggest no diabetes. Fuzzy risk score is ' + fr + '/100. Continue routine health checkups.';
+    }
+  }
+</script>
+</body>
+</html>

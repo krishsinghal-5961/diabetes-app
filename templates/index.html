@@ -368,6 +368,13 @@
         <div class="r-sub" id="r-mlp-prob">—</div>
         <div class="progress-bar"><div class="progress-fill" id="mlp-bar" style="width:0%"></div></div>
       </div>
+     <div class="result-item">
+        <div class="r-label">Final Decision</div>
+        <div class="r-value" id="r-final">—</div>
+        <div class="r-sub" id="r-final-score">—</div>
+        <div class="progress-bar">
+        <div class="progress-fill" id="final-bar" style="width:0%"></div></div>
+     </div>
     </div>
 
     <div class="verdict" id="verdict"></div>
@@ -427,7 +434,27 @@
   function showResults(data) {
     document.getElementById('results').style.display = 'block';
     document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+    // --- FINAL ENSEMBLE RESULT ---
+const finalEl = document.getElementById('r-final');
+finalEl.textContent = data.final_result;
 
+if (data.final_result === 'Diabetic') {
+  finalEl.className = 'r-value diabetic';
+} else if (data.final_result === 'Moderate Risk') {
+  finalEl.className = 'r-value medium-risk';
+} else {
+  finalEl.className = 'r-value healthy';
+}
+
+document.getElementById('r-final-score').textContent = data.final_score + '% risk';
+
+document.getElementById('final-bar').style.width = data.final_score + '%';
+document.getElementById('final-bar').className =
+  'progress-fill ' +
+  (data.final_result === 'Diabetic' ? 'fill-red' :
+   data.final_result === 'Moderate Risk' ? 'fill-yellow' :
+   'fill-green');
+   
     const fr = data.fuzzy_risk;
     const frEl = document.getElementById('r-fuzzy');
     frEl.textContent = fr;
@@ -449,18 +476,20 @@
     document.getElementById('mlp-bar').style.width = data.mlp_prob + '%';
     document.getElementById('mlp-bar').className = 'progress-fill ' + (data.mlp_result === 'Diabetic' ? 'fill-red' : 'fill-green');
 
-    const verdict = document.getElementById('verdict');
-    const diabeticCount = [data.nb_result, data.mlp_result].filter(r => r === 'Diabetic').length;
-    if (fr >= 60 || diabeticCount === 2) {
-      verdict.className = 'verdict high';
-      verdict.innerHTML = '<strong>High Risk:</strong> Both models indicate a high probability of diabetes. Fuzzy risk score is ' + fr + '/100. Clinical consultation is strongly recommended.';
-    } else if (fr >= 35 || diabeticCount === 1) {
-      verdict.className = 'verdict medium';
-      verdict.innerHTML = '<strong>Moderate Risk:</strong> Models show mixed signals. Fuzzy risk score is ' + fr + '/100. Further monitoring and lifestyle evaluation is advised.';
-    } else {
-      verdict.className = 'verdict low';
-      verdict.innerHTML = '<strong>Low Risk:</strong> Both models suggest no diabetes. Fuzzy risk score is ' + fr + '/100. Continue routine health checkups.';
-    }
+   const verdict = document.getElementById('verdict');
+
+if (data.final_result === "Diabetic") {
+  verdict.className = 'verdict high';
+  verdict.innerHTML = `<strong>High Risk:</strong> Ensemble model predicts high probability of diabetes (${data.final_score}%). Immediate clinical consultation is recommended.`;
+}
+else if (data.final_result === "Moderate Risk") {
+  verdict.className = 'verdict medium';
+  verdict.innerHTML = `<strong>Moderate Risk:</strong> Mixed indicators detected (${data.final_score}%). Monitor lifestyle and consider further testing.`;
+}
+else {
+  verdict.className = 'verdict low';
+  verdict.innerHTML = `<strong>Low Risk:</strong> Low probability of diabetes (${data.final_score}%). Maintain healthy lifestyle.`;
+}
   }
 </script>
 </body>

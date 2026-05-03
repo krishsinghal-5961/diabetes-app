@@ -29,6 +29,8 @@ def index():
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.json
+
+    # --- Input features ---
     features = [
         float(data['pregnancies']),
         float(data['glucose']),
@@ -40,21 +42,60 @@ def predict():
         float(data['age']),
     ]
 
-    fr = fuzzy_risk(features[1], features[5])
+    # --- Fuzzy logic ---
+    fr = fuzzy_risk(features[1], features[5])  # glucose, bmi
     features_with_fuzzy = features + [fr]
 
+    # --- Scaling ---
     scaled = scaler.transform([features_with_fuzzy])
-    nb_result  = 'Diabetic' if nb.predict(scaled)[0] == 1 else 'Not Diabetic'
-    mlp_result = 'Diabetic' if mlp.predict(scaled)[0] == 1 else 'Not Diabetic'
-    nb_prob    = round(float(nb.predict_proba(scaled)[0][1]) * 100, 1)
-    mlp_prob   = round(float(mlp.predict_proba(scaled)[0][1]) * 100, 1)
 
+    # --- Model Predictions ---
+    nb_pred_val  = nb.predict(scaled)[0]
+    mlp_pred_val = mlp.predict(scaled)[0]
+
+    nb_prob_raw  = float(nb.predict_proba(scaled)[0][1])   # 0–1
+    mlp_prob_raw = float(mlp.predict_proba(scaled)[0][1])  # 0–1
+
+    # --- Calibration (important fix) ---
+    nb_prob_raw = 0.7 * nb_prob_raw + 0.3 * 0.5
+
+    # --- Labels ---
+    nb_result  = 'Diabetic' if nb_pred_val == 1 else 'Not Diabetic'
+    mlp_result = 'Diabetic' if mlp_pred_val == 1 else 'Not Diabetic'
+
+    # --- Ensemble Logic ---
+    fuzzy_prob = fr / 100  # convert to 0–1
+
+    final_score = (nb_prob_raw + mlp_prob_raw + fuzzy_prob) / 3
+
+    if final_score > 0.6:
+        final_result = "Diabetic"
+        risk_level = "High Risk"
+    elif final_score > 0.3:
+        final_result = "Moderate Risk"
+        risk_level = "Moderate Risk"
+    else:
+        final_result = "Not Diabetic"
+        risk_level = "Low Risk"
+
+    # --- Convert to percentage for UI ---
+    nb_prob  = round(nb_prob_raw * 100, 1)
+    mlp_prob = round(mlp_prob_raw * 100, 1)
+    final_score_percent = round(final_score * 100, 1)
+
+    # --- Response ---
     return jsonify({
-        'fuzzy_risk': fr,
-        'nb_result':  nb_result,
-        'nb_prob':    nb_prob,
+        'fuzzy_risk': round(fr, 2),
+
+        'nb_result': nb_result,
+        'nb_prob': nb_prob,
+
         'mlp_result': mlp_result,
-        'mlp_prob':   mlp_prob,
+        'mlp_prob': mlp_prob,
+
+        'final_result': final_result,
+        'final_score': final_score_percent,
+        'risk_level': risk_level
     })
 
 if __name__ == '__main__':
